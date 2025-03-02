@@ -10,11 +10,12 @@ import {
   getLeaveRequests,
   updateLeaveStatus,
 } from "../services/allApi";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CalendarView from "./Calendar";
+
 const Hrportal = () => {
   const [show, setShow] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false); 
+  const [showCalendar, setShowCalendar] = useState(false); // State for calendar modal
   const [showLeaveRequests, setShowLeaveRequests] = useState(false); // State for leave requests modal
   const [userData, setUserDatas] = useState([]);
   const [leaveRequests, setLeaveRequests] = useState([]); // Initialize as an empty array
@@ -26,24 +27,24 @@ const Hrportal = () => {
     email: "",
     password: "",
   });
-  const [loading,setloading]=useState("")
+  const [loading, setLoading] = useState("");
 
   const navigate = useNavigate();
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
-  const handleCalendarClose = () => setShowCalendar(false); // Close calendar modal
-  const handleCalendarShow = () => setShowCalendar(true); // Show calendar modal
-  const handleLeaveRequestsClose = () => setShowLeaveRequests(false); // Close leave requests modal
-  const handleLeaveRequestsShow = () => setShowLeaveRequests(true); // Show leave requests modal
+  const handleCalendarClose = () => setShowCalendar(false); 
+  const handleCalendarShow = () => setShowCalendar(true); 
+  const handleLeaveRequestsClose = () => setShowLeaveRequests(false); 
+  const handleLeaveRequestsShow = () => setShowLeaveRequests(true); 
 
   const onSubmit = async () => {
     if (data.email && data.name && data.password && data.place && data.phone) {
       try {
         await addEmploye(data);
         alert("Successful");
-        fetchUserData(); // Fetch updated data
-        handleClose(); // Close the modal
+        fetchUserData();
+        handleClose(); 
       } catch (error) {
         console.log(error);
       }
@@ -67,7 +68,7 @@ const Hrportal = () => {
       setLeaveRequests(response.data);
     } catch (error) {
       console.log(error);
-      setLeaveRequests([]); // Ensure leaveRequests is an array even if the API call fails
+      setLeaveRequests([]); 
     }
   };
 
@@ -80,7 +81,7 @@ const Hrportal = () => {
     try {
       await onDeleteData(id);
       alert("Deleted successfully");
-      fetchUserData(); // Fetch updated data
+      fetchUserData(); 
     } catch (error) {
       console.log(error);
     }
@@ -89,11 +90,15 @@ const Hrportal = () => {
   const handleLeaveStatusUpdate = async (id, status) => {
     try {
       await updateLeaveStatus(id, status);
-      setloading("approving")
-      fetchLeaveRequests(); // Fetch updated leave requests
+      setLoading("approving");
+      fetchLeaveRequests();
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const clearProcessedLeaveRequests = () => {
+    setLeaveRequests(leaveRequests.filter(request => request.status === "pending"));
   };
 
   return (
@@ -155,7 +160,7 @@ const Hrportal = () => {
             </a>
             <a
               href="#"
-              onClick={handleCalendarShow} // Show calendar modal on click
+              onClick={handleCalendarShow} 
               style={{
                 color: "white",
                 textDecoration: "none",
@@ -179,7 +184,7 @@ const Hrportal = () => {
             }}
           />
           <button
-            onClick={handleLeaveRequestsShow} // Show leave requests modal on click
+            onClick={handleLeaveRequestsShow} 
             style={{
               backgroundColor: "#FBBF24",
               padding: "8px 16px",
@@ -191,6 +196,21 @@ const Hrportal = () => {
           >
             Leave Requests
           </button>
+
+          <Link to={'/'}><button
+           
+           style={{
+             backgroundColor: "#FBBF24",
+             padding: "8px 16px",
+             borderRadius: "4px",
+             border: "none",
+             cursor: "pointer",
+             fontWeight: "bold",
+           }}
+         >
+           Log out CHAMP
+         </button></Link>
+          
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <img
               src="https://storage.googleapis.com/a1aa/image/dHoWckSeplOu6fEExAG-zS6V9F3JAQDzHQtsCPUeLDc.jpg"
@@ -442,6 +462,11 @@ const Hrportal = () => {
           <Modal.Title>Leave Requests</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          <div className="d-flex justify-content-end mb-3">
+            <button className="btn btn-danger" onClick={clearProcessedLeaveRequests}>
+              Clear Processed Requests
+            </button>
+          </div>
           <table
             style={{
               width: "100%",

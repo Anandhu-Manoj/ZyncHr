@@ -5,7 +5,7 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
 import Form from "react-bootstrap/Form";
-import { applyLeave, getLeave } from "../services/allApi";
+import { applyLeave, getLeave, clearProcessedLeaveRequests } from "../services/allApi";
 
 const Empportal = () => {
   const [employee, setEmployee] = useState(null);
@@ -19,10 +19,11 @@ const Empportal = () => {
 
   const navigate = useNavigate();
   const [show, setShow] = useState(false);
+  const [loading, setLoading] = useState("");
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
- const [loading,setLoading]=useState("")
+
   useEffect(() => {
     const storedEmployee = localStorage.getItem("employee");
     if (storedEmployee) {
@@ -36,7 +37,7 @@ const Empportal = () => {
     if (employee) {
       fetchLeaves();
     }
-  }, [employee,loading]);
+  }, [employee, loading]);
 
   const fetchLeaves = async () => {
     try {
@@ -44,6 +45,15 @@ const Empportal = () => {
       const filteredJobs = serverResp.data.filter((e) => e.empId === employee.id);
       setLeaves(filteredJobs);
       console.log(filteredJobs);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleClearProcessedLeaves = async () => {
+    try {
+      await clearProcessedLeaveRequests();
+      setLeaves(leaves.filter((leave) => leave.status === "pending")); // Update the state to remove processed leaves
     } catch (error) {
       console.log(error);
     }
@@ -82,7 +92,7 @@ const Empportal = () => {
         status: "pending",
       };
       await applyLeave(payload);
-      setLoading("hiii")
+      setLoading("hiii");
       setShow(false);
     } catch (error) {
       console.log(error);
@@ -294,6 +304,9 @@ const Empportal = () => {
                   ) : (
                     <p>No leave records found.</p>
                   )}
+                  <button className="btn btn-danger mt-3" onClick={handleClearProcessedLeaves}>
+                    Clear Processed Leaves
+                  </button>
                 </div>
               )}
             </div>

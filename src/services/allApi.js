@@ -32,11 +32,14 @@ export const getLeave = async () => {
   return await commonApi("GET", "/Leaves", "");
 };
 
-
 export const getLeaveRequests = async () => {
   return await commonApi("GET", "/Leaves", "");
 };
 
 export const updateLeaveStatus = async (id, status) => {
-  return await commonApi("PATCH", `/Leaves/${id}`, {status});
+  return await commonApi("PATCH", `/Leaves/${id}`, { status });
+};
+
+export const clearProcessedLeaveRequests = async () => {
+  return await commonApi("DELETE", "/Leaves/processed");
 };
