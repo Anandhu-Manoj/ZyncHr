@@ -1,6 +1,101 @@
-import React from "react";
-
+import React, { useEffect, useState } from "react";
+import Button from "react-bootstrap/Button";
+import Modal from "react-bootstrap/Modal";
+import FloatingLabel from "react-bootstrap/FloatingLabel";
+import Form from "react-bootstrap/Form";
+import {
+  addEmploye,
+  getEmployee,
+  onDeleteData,
+  getLeaveRequests,
+  updateLeaveStatus,
+} from "../services/allApi";
+import { useNavigate } from "react-router-dom";
+import CalendarView from "./Calendar";
 const Hrportal = () => {
+  const [show, setShow] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false); 
+  const [showLeaveRequests, setShowLeaveRequests] = useState(false); // State for leave requests modal
+  const [userData, setUserDatas] = useState([]);
+  const [leaveRequests, setLeaveRequests] = useState([]); // Initialize as an empty array
+  const [data, setData] = useState({
+    name: "",
+    place: "",
+    phone: "",
+    Role: "Employe",
+    email: "",
+    password: "",
+  });
+  const [loading,setloading]=useState("")
+
+  const navigate = useNavigate();
+
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+  const handleCalendarClose = () => setShowCalendar(false); // Close calendar modal
+  const handleCalendarShow = () => setShowCalendar(true); // Show calendar modal
+  const handleLeaveRequestsClose = () => setShowLeaveRequests(false); // Close leave requests modal
+  const handleLeaveRequestsShow = () => setShowLeaveRequests(true); // Show leave requests modal
+
+  const onSubmit = async () => {
+    if (data.email && data.name && data.password && data.place && data.phone) {
+      try {
+        await addEmploye(data);
+        alert("Successful");
+        fetchUserData(); // Fetch updated data
+        handleClose(); // Close the modal
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      alert("Please fill the form");
+    }
+  };
+
+  const fetchUserData = async () => {
+    try {
+      let response = await getEmployee();
+      setUserDatas(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchLeaveRequests = async () => {
+    try {
+      let response = await getLeaveRequests();
+      setLeaveRequests(response.data);
+    } catch (error) {
+      console.log(error);
+      setLeaveRequests([]); // Ensure leaveRequests is an array even if the API call fails
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+    fetchLeaveRequests();
+  }, [loading]);
+
+  const onDelete = async (id) => {
+    try {
+      await onDeleteData(id);
+      alert("Deleted successfully");
+      fetchUserData(); // Fetch updated data
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleLeaveStatusUpdate = async (id, status) => {
+    try {
+      await updateLeaveStatus(id, status);
+      setloading("approving")
+      fetchLeaveRequests(); // Fetch updated leave requests
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <div
       style={{
@@ -60,6 +155,7 @@ const Hrportal = () => {
             </a>
             <a
               href="#"
+              onClick={handleCalendarShow} // Show calendar modal on click
               style={{
                 color: "white",
                 textDecoration: "none",
@@ -83,6 +179,7 @@ const Hrportal = () => {
             }}
           />
           <button
+            onClick={handleLeaveRequestsShow} // Show leave requests modal on click
             style={{
               backgroundColor: "#FBBF24",
               padding: "8px 16px",
@@ -92,7 +189,7 @@ const Hrportal = () => {
               fontWeight: "bold",
             }}
           >
-            Schedule Meeting
+            Leave Requests
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <img
@@ -199,8 +296,10 @@ const Hrportal = () => {
           />
         </div>
 
-        <div className="container " style={{ marginTop: "100px" }}>
-          <div className="btn btn-primary">Add Employe</div>
+        <div className="container" style={{ marginTop: "100px" }}>
+          <div className="btn btn-primary" onClick={handleShow}>
+            Add Employe
+          </div>
           <table
             style={{
               width: "100%",
@@ -218,26 +317,191 @@ const Hrportal = () => {
                 <th style={{ padding: "12px", textAlign: "left" }}>NAME</th>
                 <th style={{ padding: "12px", textAlign: "left" }}>PLACE</th>
                 <th style={{ padding: "12px", textAlign: "left" }}>PHONE</th>
+                <th style={{ padding: "12px", textAlign: "left" }}>Email</th>
+                <th style={{ padding: "12px", textAlign: "left" }}>
+                  PASSWORD
+                </th>
                 <th style={{ padding: "12px", textAlign: "left" }}>EDIT</th>
               </tr>
             </thead>
             <tbody>
-              <tr style={{ borderBottom: "1px solid #E5E7EB ",marginLeft:"500px" }}>
-                <td style={{ padding: "12px" }}>1</td>
-                <td style={{ padding: "12px" }}>ANANDHU</td>
-                <td style={{ padding: "12px" }}>TRIVANDRUM</td>
-                <td style={{ padding: "12px" }}>8129438086</td>
-                <td style={{ padding: "12px", }}>
-                  <div className="btn btn-primary me-2"><i className="fa-solid fa-eye"></i></div>
-                  <div className="btn btn-success me-2"><i className="fa-solid fa-user-pen"></i></div>
-                  <div className="btn btn-danger me-2"><i className="fa-solid fa-trash"></i></div>
-                </td>
-              </tr>
-              {/* Add more rows as needed */}
+              {userData.length > 0
+                ? userData.map((value, index) => (
+                    <tr
+                      key={index}
+                      style={{
+                        borderBottom: "1px solid #E5E7EB",
+                      }}
+                    >
+                      <td style={{ padding: "12px" }}>{index + 1}</td>
+                      <td style={{ padding: "12px" }}>{value.name}</td>
+                      <td style={{ padding: "12px" }}>{value.place}</td>
+                      <td style={{ padding: "12px" }}>{value.phone}</td>
+                      <td style={{ padding: "12px" }}>{value.email}</td>
+                      <td style={{ padding: "12px" }}>{value.password}</td>
+                      <td style={{ padding: "12px" }}>
+                        <div className="btn btn-primary me-2" onClick={() => navigate(`/empdtls/${value.id}`)}>
+                          <i className="fa-solid fa-eye"></i>
+                        </div>
+                        <div className="btn btn-success me-2" onClick={() => navigate(`/empdtls/${value.id}`)}>
+                          <i className="fa-solid fa-user-pen"></i>
+                        </div>
+                        <div
+                          onClick={() => onDelete(value.id)}
+                          className="btn btn-danger me-2"
+                        >
+                          <i className="fa-solid fa-trash"></i>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                : "no data found"}
             </tbody>
           </table>
         </div>
       </main>
+      <Modal show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>ADD Employees</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <FloatingLabel controlId="floatingInput" label="Name" className="mb-3">
+            <Form.Control
+              onChange={(e) => {
+                setData({ ...data, name: e.target.value });
+              }}
+              type="text"
+              placeholder="Name"
+            />
+          </FloatingLabel>
+          <FloatingLabel controlId="floatingInput" label="Place" className="mb-3">
+            <Form.Control
+              onChange={(e) => {
+                setData({ ...data, place: e.target.value });
+              }}
+              type="text"
+              placeholder="Place"
+            />
+          </FloatingLabel>
+          <FloatingLabel controlId="floatingInput" label="Phone" className="mb-3">
+            <Form.Control
+              onChange={(e) => {
+                setData({ ...data, phone: e.target.value });
+              }}
+              type="text"
+              placeholder="Phone"
+            />
+          </FloatingLabel>
+          <FloatingLabel controlId="floatingInput" label="Email" className="mb-3">
+            <Form.Control
+              onChange={(e) => {
+                setData({ ...data, email: e.target.value });
+              }}
+              type="email"
+              placeholder="Email"
+            />
+          </FloatingLabel>
+          <FloatingLabel controlId="floatingInput" label="Password" className="mb-3">
+            <Form.Control
+              onChange={(e) => {
+                setData({ ...data, password: e.target.value });
+              }}
+              type="text"
+              placeholder="Password"
+            />
+          </FloatingLabel>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={onSubmit}>
+            Submit
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Calendar Modal */}
+      <Modal show={showCalendar} onHide={handleCalendarClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Calendar</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <CalendarView />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCalendarClose}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Leave Requests Modal */}
+      <Modal show={showLeaveRequests} onHide={handleLeaveRequestsClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Leave Requests</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              marginTop: "24px",
+              backgroundColor: "white",
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+              borderRadius: "12px",
+              overflow: "hidden",
+            }}
+          >
+            <thead style={{ backgroundColor: "#1E3A8A", color: "white" }}>
+              <tr>
+                <th style={{ padding: "12px", textAlign: "left" }}>Id</th>
+                <th style={{ padding: "12px", textAlign: "left" }}>Employee Name</th>
+                <th style={{ padding: "12px", textAlign: "left" }}>Reason</th>
+                <th style={{ padding: "12px", textAlign: "left" }}>Status</th>
+                <th style={{ padding: "12px", textAlign: "left" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaveRequests.length > 0 ? (
+                leaveRequests.map((request, index) => (
+                  <tr key={index} style={{ borderBottom: "1px solid #E5E7EB" }}>
+                    <td style={{ padding: "12px" }}>{index + 1}</td>
+                    <td style={{ padding: "12px" }}>{request.empleename}</td>
+                    <td style={{ padding: "12px" }}>{request.reason}</td>
+                    <td style={{ padding: "12px" }}>{request.status}</td>
+                    <td style={{ padding: "12px" }}>
+                      <button
+                        className="btn btn-success me-2"
+                        onClick={() => handleLeaveStatusUpdate(request.id, "approved")}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => handleLeaveStatusUpdate(request.id, "rejected")}
+                      >
+                        Disapprove
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" style={{ padding: "12px", textAlign: "center" }}>
+                    No leave requests found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleLeaveRequestsClose}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
