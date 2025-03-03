@@ -133,12 +133,12 @@ const Empportal = () => {
           </li>
           <li className="nav-item m-2">
             <a className="nav-link" href="#" style={{ color: "#fff" }}>
-              Link
+              Gmail
             </a>
           </li>
           <li className="nav-item m-2">
             <a className="nav-link" href="#" style={{ color: "#fff" }}>
-              Link
+              Meetings
             </a>
           </li>
           <li className="nav-item m-2">
